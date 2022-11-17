@@ -62,6 +62,17 @@ func TestCheckMinIO(t *testing.T) {
 		UseIAM:   true,
 	})
 	assert.NoError(t, err)
+
+	err = CheckMinIO(CheckMinIOArgs{
+		Type:     v1beta1.StorageTypeS3,
+		AK:       "",
+		SK:       "",
+		Endpoint: "storage.googleapis.com:443",
+		Bucket:   "zilliz-uat-test1",
+		UseSSL:   true,
+		UseIAM:   true,
+	})
+	assert.NoError(t, err)
 }
 
 func TestIsHealthyByServerInfo(t *testing.T) {

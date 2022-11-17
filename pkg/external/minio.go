@@ -36,12 +36,7 @@ func CheckMinIO(args CheckMinIOArgs) error {
 			// minio client cannot recognize aws endpoints with :443
 			endpoint = strings.TrimSuffix(endpoint, ":443")
 		}
-		var creds *credentials.Credentials
-		if args.UseIAM {
-			creds = credentials.NewIAM(args.IAMEndpoint)
-		} else {
-			creds = credentials.NewStaticV4(args.AK, args.SK, "")
-		}
+		creds := credentials.NewStaticV2(args.AK, args.SK, "")
 		cli, err := minio.New(endpoint, &minio.Options{
 			Creds:  creds,
 			Secure: args.UseSSL,
