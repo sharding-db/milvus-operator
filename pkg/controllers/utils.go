@@ -372,6 +372,15 @@ func GetMinioBucket(conf map[string]interface{}) string {
 	return defaultBucketName
 }
 
+func GetMinioCloudProvider(conf map[string]interface{}) string {
+	fields := []string{"minio", "cloudProvider"}
+	val, exist := util.GetStringValue(conf, fields...)
+	if exist {
+		return val
+	}
+	return ""
+}
+
 const defaultBucketName = "milvus-bucket"
 
 func diffObject(old, new client.Object) ([]byte, error) {
