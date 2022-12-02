@@ -25,8 +25,9 @@ const (
 var (
 	defaultConfig *Config
 	// set by run flag in main
-	OperatorNamespace = "milvus-operator"
-	OperatorName      = "milvus-operator"
+	OperatorNamespace      = "milvus-operator"
+	OperatorName           = "milvus-operator"
+	MaxConcurrentReconcile = 10
 )
 
 func Init(workDir string) error {

@@ -173,7 +173,7 @@ func (r *MilvusReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		//Owns(&corev1.ConfigMap{}).
 		//Owns(&corev1.Service{}).
 		//WithEventFilter(&MilvusPredicate{}).
-		WithOptions(controller.Options{MaxConcurrentReconciles: 1})
+		WithOptions(controller.Options{MaxConcurrentReconciles: config.MaxConcurrentReconcile})
 
 	/* if config.IsDebug() {
 		builder.WithEventFilter(DebugPredicate())
