@@ -50,7 +50,6 @@ var _ webhook.Defaulter = &Milvus{}
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *Milvus) Default() {
-	milvuslog.Info("default", "name", r.Name)
 	r.DefaultMeta()
 	r.DefaultMode()
 	r.DefaultComponents()
