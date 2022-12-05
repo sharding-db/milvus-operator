@@ -57,6 +57,7 @@ func main() {
 	flag.StringVar(&config.OperatorNamespace, "namespace", config.OperatorNamespace, "The namespace of self")
 	flag.StringVar(&config.OperatorName, "name", config.OperatorName, "The name of self")
 	flag.IntVar(&config.MaxConcurrentReconcile, "max-concurrent", config.MaxConcurrentReconcile, "The max concurrent reconcile")
+	flag.IntVar(&config.SyncIntervalSec, "sync-interval", config.SyncIntervalSec, "The interval of sync milvus")
 	flag.BoolVar(&enablePprof, "pprof", enablePprof, "Enable pprof")
 	opts := zap.Options{
 		Development: true,

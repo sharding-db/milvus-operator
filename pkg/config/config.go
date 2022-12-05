@@ -28,6 +28,7 @@ var (
 	OperatorNamespace      = "milvus-operator"
 	OperatorName           = "milvus-operator"
 	MaxConcurrentReconcile = 10
+	SyncIntervalSec        = 60
 )
 
 func Init(workDir string) error {
