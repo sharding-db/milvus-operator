@@ -274,6 +274,10 @@ func (r *MilvusStatusSyncer) UpdateStatusForNewGeneration(ctx context.Context, m
 	if IsEqual(beginStatus, mc.Status) {
 		return nil
 	}
+	copyWithBeginStatus := mc.DeepCopy()
+	copyWithBeginStatus.Status = *beginStatus
+	diff, _ := diffObject(copyWithBeginStatus, mc)
+	r.logger.Info("update status", "diff", diff)
 	return r.Status().Update(ctx, mc)
 }
 
