@@ -11,7 +11,7 @@ pipeline {
    }
    agent {
         kubernetes {
-            label 'milvus-operator-ci'
+            label 'infra-api-ci'
             inheritFrom 'default'
             defaultContainer 'main'
             yamlFile 'ci/pod/ci.yaml'
@@ -22,7 +22,7 @@ pipeline {
         gitParameter branchFilter: 'origin/(.*)', defaultValue: 'master', name: 'BRANCH', type: 'PT_BRANCH'
     }
    environment{
-      DOCKER_IMAGE="harbor-ap1.zilliz.cc/infra/${image_name}"
+      DOCKER_IMAGE="harbor-us-vdc.zilliz.cc/infra/${image_name}"
       GITHUB_TOKEN_ID="github-token"
       TEST_ENVIRONMENT="sit"
       ARGOCD_TOKEN_ID="argocd-token"
