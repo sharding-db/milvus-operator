@@ -6,12 +6,12 @@ metadata:
 spec:
   containers:
   - name: main
-    image: harbor-ap1.zilliz.cc/devops/cd-base:20220316-a7c2c5e
+    image: harbor-us-vdc.zilliz.cc/devops/cd-base:20220316-a7c2c5e
     args: ["cat"]
     tty: true
   - name: kaniko
     imagePullPolicy: IfNotPresent
-    image: harbor-ap1.zilliz.cc/devops/kaniko-executor:v1.8.0-debug
+    image: harbor-us-vdc.zilliz.cc/devops/kaniko-executor:v1.8.0-debug
     command:
     - /busybox/cat
     tty: true
@@ -21,7 +21,7 @@ spec:
   volumes:
     - name: kaniko-secret
       secret:
-        secretName: kaniko-secret
+        secretName: kaniko-secret-us
         items:
           - key: .dockerconfigjson
             path: config.json
