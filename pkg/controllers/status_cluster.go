@@ -137,9 +137,10 @@ func (r *MilvusStatusSyncer) syncUnealthyOrUpdating() error {
 	if err != nil {
 		return errors.Wrap(err, "list milvus failed")
 	}
-	var argsArray = make([]*v1beta1.Milvus, 0, config.MaxConcurrentHealthCheck)
+	var argsArray = []*v1beta1.Milvus{}
 	var ret error
 	for i := range milvusList.Items {
+		argsArray = make([]*v1beta1.Milvus, 0, config.MaxConcurrentHealthCheck)
 		mc := &milvusList.Items[i]
 		if mc.Status.Status == "" ||
 			(mc.Status.Status == v1beta1.StatusHealthy &&
@@ -272,7 +273,7 @@ func (r *MilvusStatusSyncer) UpdateStatusForNewGeneration(ctx context.Context, m
 		IsHealthy:  milvusCond.Status == corev1.ConditionTrue,
 	}
 	mc.Status.Status = statusInfo.GetMilvusHealthStatus()
-	diff := cmp.Diff(beginStatus, mc.Status)
+	diff := cmp.Diff(beginStatus, &mc.Status)
 	if len(diff) == 0 {
 		return nil
 	}
