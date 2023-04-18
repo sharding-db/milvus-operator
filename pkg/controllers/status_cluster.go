@@ -179,14 +179,12 @@ func (r *MilvusStatusSyncer) syncHealthyUpdated() error {
 	var argsArray []*v1beta1.Milvus
 	var ret error
 	for i := range milvusList.Items {
+		argsArray = make([]*v1beta1.Milvus, 0, config.MaxConcurrentHealthCheck)
 		mc := &milvusList.Items[i]
 		if mc.DeletionTimestamp != nil ||
 			mc.Status.Status != v1beta1.StatusHealthy ||
 			!IsMilvusConditionTrueByType(mc.Status.Conditions, v1beta1.MilvusUpdated) {
 			continue
-		}
-		if argsArray == nil {
-			argsArray = make([]*v1beta1.Milvus, 0, config.MaxConcurrentHealthCheck)
 		}
 		argsArray = append(argsArray, mc)
 		if len(argsArray) >= config.MaxConcurrentHealthCheck {
