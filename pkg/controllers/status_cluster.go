@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -271,12 +272,10 @@ func (r *MilvusStatusSyncer) UpdateStatusForNewGeneration(ctx context.Context, m
 		IsHealthy:  milvusCond.Status == corev1.ConditionTrue,
 	}
 	mc.Status.Status = statusInfo.GetMilvusHealthStatus()
-	if IsEqual(beginStatus, mc.Status) {
+	diff := cmp.Diff(beginStatus, mc.Status)
+	if len(diff) == 0 {
 		return nil
 	}
-	copyWithBeginStatus := mc.DeepCopy()
-	copyWithBeginStatus.Status = *beginStatus
-	diff, _ := diffObject(copyWithBeginStatus, mc)
 	r.logger.Info("update status", "diff", diff)
 	return r.Status().Update(ctx, mc)
 }
