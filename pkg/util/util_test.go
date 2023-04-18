@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/yaml"
@@ -260,4 +261,30 @@ func (v mockMarshal) UnmarshalJSON(data []byte) error {
 func TestTruePtr(t *testing.T) {
 	assert.True(t, *BoolPtr(true))
 	assert.False(t, *BoolPtr(false))
+}
+
+func Test_DoWithBackoff(t *testing.T) {
+	var err error
+	err = DoWithBackoff("test", func() error {
+		return nil
+	}, 3, time.Second)
+	assert.NoError(t, err)
+
+	err = DoWithBackoff("test", func() error {
+		return errors.New("test error")
+	}, 3, time.Second)
+	assert.Error(t, err)
+
+	t.Run("failed then success", func(t *testing.T) {
+		var i int
+		err = DoWithBackoff("test", func() error {
+			i++
+			if i == 3 {
+				return nil
+			}
+			return errors.New("test error")
+		}, 3, time.Second)
+		assert.NoError(t, err)
+		assert.Equal(t, 3, i)
+	})
 }
