@@ -10,6 +10,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/milvus-io/milvus-operator/apis/milvus.io/v1beta1"
 	"github.com/milvus-io/milvus-operator/pkg/external"
+	"github.com/milvus-io/milvus-operator/pkg/util"
 	"github.com/pkg/errors"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -200,42 +201,45 @@ func GetEndpointsHealth(endpoints []string) map[string]EtcdEndPointHealth {
 		go func(ep string) {
 			defer wg.Done()
 
-			cli, err := etcdNewClient(clientv3.Config{
-				Endpoints:   []string{ep},
-				DialTimeout: 5 * time.Second,
-			})
-			if err != nil {
-				hch <- EtcdEndPointHealth{Ep: ep, Health: false, Error: err.Error()}
+			var checkEtcd = func() error {
+				cli, err := etcdNewClient(clientv3.Config{
+					Endpoints:   []string{ep},
+					DialTimeout: 5 * time.Second,
+				})
+				if err != nil {
+					return errors.Wrap(err, "failed to create etcd client")
+				}
+				defer cli.Close()
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer cancel()
+				_, err = cli.Get(ctx, etcdHealthKey, clientv3.WithSerializable()) // use serializable to avoid linear read overhead
+				// permission denied is OK since proposal goes through consensus to get it
+				if err != nil && err != rpctypes.ErrPermissionDenied {
+					return err
+				}
+				resp, err := cli.AlarmList(ctx)
+				if err != nil {
+					return errors.Wrap(err, "Unable to fetch the alarm list")
+				}
+				// err == nil
+				if len(resp.Alarms) < 1 {
+					return nil
+				}
+				// if len(resp.Alarms) > 0
+				errMsg := "Active Alarm(s): "
+				for _, v := range resp.Alarms {
+					errMsg += errMsg + v.Alarm.String()
+				}
+				return errors.New(errMsg)
+			}
+			const backOffInterval = time.Second * 1
+			const maxRetry = 3
+			err := util.DoWithBackoff("checkEtcd", checkEtcd, maxRetry, backOffInterval)
+			if err == nil {
+				hch <- EtcdEndPointHealth{Ep: ep, Health: true}
 				return
 			}
-			defer cli.Close()
-
-			eh := EtcdEndPointHealth{Ep: ep, Health: false}
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			_, err = cli.Get(ctx, etcdHealthKey, clientv3.WithSerializable()) // use serializable to avoid linear read overhead
-			// permission denied is OK since proposal goes through consensus to get it
-			if err == nil || err == rpctypes.ErrPermissionDenied {
-				eh.Health = true
-			} else {
-				eh.Error = err.Error()
-			}
-
-			if eh.Health {
-				resp, err := cli.AlarmList(ctx)
-				if err == nil && len(resp.Alarms) > 0 {
-					eh.Health = false
-					eh.Error = "Active Alarm(s): "
-					for _, v := range resp.Alarms {
-						eh.Error += eh.Error + v.Alarm.String()
-					}
-				} else if err != nil {
-					eh.Health = false
-					eh.Error = "Unable to fetch the alarm list"
-				}
-
-			}
-			cancel()
-			hch <- eh
+			hch <- EtcdEndPointHealth{Ep: ep, Health: false, Error: err.Error()}
 		}(ep)
 	}
 
