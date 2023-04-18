@@ -137,10 +137,9 @@ func (r *MilvusStatusSyncer) syncUnealthyOrUpdating() error {
 	if err != nil {
 		return errors.Wrap(err, "list milvus failed")
 	}
-	var argsArray = []*v1beta1.Milvus{}
+	var argsArray = make([]*v1beta1.Milvus, 0, config.MaxConcurrentHealthCheck)
 	var ret error
 	for i := range milvusList.Items {
-		argsArray = make([]*v1beta1.Milvus, 0, config.MaxConcurrentHealthCheck)
 		mc := &milvusList.Items[i]
 		if mc.Status.Status == "" ||
 			(mc.Status.Status == v1beta1.StatusHealthy &&
@@ -148,7 +147,7 @@ func (r *MilvusStatusSyncer) syncUnealthyOrUpdating() error {
 			mc.DeletionTimestamp != nil {
 			continue
 		}
-		argsArray = append(argsArray, mc)
+		argsArray = append(argsArray, &milvusList.Items[i])
 		if len(argsArray) >= config.MaxConcurrentHealthCheck {
 			err = defaultGroupRunner.RunDiffArgs(r.UpdateStatusRoutine, r.ctx, argsArray)
 			if err != nil {
@@ -176,22 +175,22 @@ func (r *MilvusStatusSyncer) syncHealthyUpdated() error {
 	if err != nil {
 		return errors.Wrap(err, "list milvus failed")
 	}
-	var argsArray []*v1beta1.Milvus
+	var argsArray = make([]*v1beta1.Milvus, 0, config.MaxConcurrentHealthCheck)
 	var ret error
 	for i := range milvusList.Items {
-		argsArray = make([]*v1beta1.Milvus, 0, config.MaxConcurrentHealthCheck)
 		mc := &milvusList.Items[i]
 		if mc.DeletionTimestamp != nil ||
 			mc.Status.Status != v1beta1.StatusHealthy ||
 			!IsMilvusConditionTrueByType(mc.Status.Conditions, v1beta1.MilvusUpdated) {
 			continue
 		}
-		argsArray = append(argsArray, mc)
+		argsArray = append(argsArray, &milvusList.Items[i])
 		if len(argsArray) >= config.MaxConcurrentHealthCheck {
 			err = defaultGroupRunner.RunDiffArgs(r.UpdateStatusRoutine, r.ctx, argsArray)
 			if err != nil {
 				ret = err
 			}
+			argsArray = make([]*v1beta1.Milvus, 0, config.MaxConcurrentHealthCheck)
 		}
 	}
 	err = defaultGroupRunner.RunDiffArgs(r.UpdateStatusRoutine, r.ctx, argsArray)
