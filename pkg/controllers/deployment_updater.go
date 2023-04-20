@@ -112,16 +112,21 @@ func updateDeployment(deployment *appsv1.Deployment, updater deploymentUpdater) 
 	}
 	componentName := updater.GetComponentName()
 	if componentName == ProxyName || componentName == StandaloneName {
-		container.Ports = []corev1.ContainerPort{
-			{
-				Name:          updater.GetPortName(),
-				ContainerPort: MilvusPort,
-				Protocol:      corev1.ProtocolTCP,
-			},
-			metricPort,
+		servicePort := corev1.ContainerPort{
+			Name:          updater.GetPortName(),
+			ContainerPort: MilvusPort,
+			Protocol:      corev1.ProtocolTCP,
 		}
-	} else {
-		container.Ports = []corev1.ContainerPort{metricPort}
+		portIdx := GetContainerPortIndex(container.Ports, updater.GetPortName())
+		if portIdx < 0 {
+			container.Ports = append(container.Ports, servicePort)
+		}
+
+	}
+	// add metric port
+	metricPortIdx := GetContainerPortIndex(container.Ports, MetricPortName)
+	if metricPortIdx < 0 {
+		container.Ports = append(container.Ports, metricPort)
 	}
 
 	addVolumeMount(&container.VolumeMounts, configVolumeMount)

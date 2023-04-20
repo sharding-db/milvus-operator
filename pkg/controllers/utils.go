@@ -188,6 +188,16 @@ func GetContainerIndex(containers []corev1.Container, name string) int {
 	return -1
 }
 
+// GetContainerPortIndex returns index of container port @name in @container.ports, -1 if not found
+func GetContainerPortIndex(ports []corev1.ContainerPort, name string) int {
+	for i, p := range ports {
+		if p.Name == name {
+			return i
+		}
+	}
+	return -1
+}
+
 // GetVolumeIndex returns index of volume @name in @volumes, -1 if not found
 func GetVolumeIndex(volumes []corev1.Volume, name string) int {
 	for i, v := range volumes {
