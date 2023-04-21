@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -28,11 +29,19 @@ import (
 var pulsarNewClient = pulsar.NewClient
 
 func GetCondition(getter func() v1beta1.MilvusCondition, eps []string) v1beta1.MilvusCondition {
-	// check cache
-	condition, uptodate := endpointCheckCache.Get(eps)
-	if uptodate {
-		return *condition
+	// lock & get again
+	for !endpointCheckCache.TryStartProbeFor(eps) {
+		// check cache
+		condition, found := endpointCheckCache.Get(eps)
+		if found {
+			return *condition
+		}
+		// backoff and retry again
+		log.Println("Endpoint is start being probed, backoff and retry. This should only happen when milvus-operator is just started")
+		backoffTime := 500 * time.Millisecond
+		time.Sleep(backoffTime)
 	}
+	defer endpointCheckCache.EndProbeFor(eps)
 	ret := getter()
 	endpointCheckCache.Set(eps, &ret)
 	return ret
