@@ -354,7 +354,16 @@ func GetMilvusInstanceCondition(ctx context.Context, cli client.Client, mc v1bet
 	for _, component := range allComponents {
 		deployment := componentDeploy[component.Name]
 		if deployment != nil && DeploymentReady(deployment.Status) {
-			continue
+			// deployment ready, check replicas
+			if deployment.Status.ReadyReplicas > 0 {
+				continue
+			}
+			switch component.Name {
+			case ProxyName, StandaloneName:
+				// proxy and standalone must have at least one replica
+			default:
+				continue
+			}
 		}
 		notReadyComponents = append(notReadyComponents, component.Name)
 		if errDetail == nil {

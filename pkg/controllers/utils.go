@@ -309,6 +309,23 @@ func GetNotReadyDependencyConditions(conditions []v1beta1.MilvusCondition) map[v
 	return ret
 }
 
+func RemoveConditions(status *v1beta1.MilvusStatus, typesToRemove []v1beta1.MilvusConditionType) {
+	var newConditions []v1beta1.MilvusCondition
+	for _, c := range status.Conditions {
+		shouldRemove := false
+		for _, typeToRemove := range typesToRemove {
+			if c.Type == typeToRemove {
+				shouldRemove = true
+				continue
+			}
+		}
+		if !shouldRemove {
+			newConditions = append(newConditions, c)
+		}
+	}
+	status.Conditions = newConditions
+}
+
 func UpdateCondition(status *v1beta1.MilvusStatus, c v1beta1.MilvusCondition) {
 	for i := range status.Conditions {
 		cp := &status.Conditions[i]
