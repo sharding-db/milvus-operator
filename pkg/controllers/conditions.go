@@ -332,13 +332,6 @@ func GetMilvusInstanceCondition(ctx context.Context, cli client.Client, mc v1bet
 			}
 		}
 		ctrl.LoggerFrom(ctx).Info("milvus dependency unhealty", "reason", reason, "msg", msg)
-
-		return v1beta1.MilvusCondition{
-			Type:    v1beta1.MilvusReady,
-			Status:  corev1.ConditionFalse,
-			Reason:  reason,
-			Message: msg,
-		}, nil
 	}
 
 	deployList := &appsv1.DeploymentList{}

@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "crypto/sha256"
 	"fmt"
-	"log"
 	"reflect"
 	"runtime"
 	"strings"
@@ -303,7 +302,6 @@ func GetNotReadyDependencyConditions(conditions []v1beta1.MilvusCondition) map[v
 				delete(ret, iter.Type)
 				continue
 			}
-			log.Println("condition not ready", iter.Type, iter.Status, iter.Reason, iter.Message)
 			conditionCopy := iter
 			ret[iter.Type] = &conditionCopy
 		}
