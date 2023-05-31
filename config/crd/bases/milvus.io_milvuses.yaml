@@ -4160,6 +4160,9 @@ spec:
                     additionalProperties:
                       type: string
                     type: object
+                  podMonitor:
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
                   proxy:
                     properties:
                       affinity:
