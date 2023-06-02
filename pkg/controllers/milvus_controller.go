@@ -80,7 +80,9 @@ type MilvusReconciler struct {
 func (r *MilvusReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	r.statusSyncer.RunIfNot()
 	globalCommonInfo.InitIfNot(r.Client)
-
+	logger := ctrl.LoggerFrom(ctx).WithValues("milvus", req.NamespacedName)
+	logger.Info("Reconciling start")
+	defer logger.Info("Reconciling end")
 	if !config.IsDebug() {
 		defer func() {
 			if err := recover(); err != nil {
