@@ -39,6 +39,7 @@ import (
 const (
 	MilvusFinalizerName      = "milvus.milvus.io/finalizer"
 	PauseReconcileAnnotation = "milvus.io/pause-reconcile"
+	MaintainingAnnotation    = "milvus.io/maintaining"
 )
 
 // MilvusReconciler reconciles a Milvus object
@@ -164,7 +165,8 @@ func (r *MilvusReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 		return ctrl.Result{}, err
 	}
 	// metrics
-	milvusStatusCollector.WithLabelValues(milvus.Namespace, milvus.Name).Set(MilvusStatusToCode(milvus.Status.Status))
+	milvusStatusCollector.WithLabelValues(milvus.Namespace, milvus.Name).
+		Set(MilvusStatusToCode(milvus.Status.Status, milvus.GetAnnotations()[MaintainingAnnotation] == "true"))
 
 	return ctrl.Result{}, nil
 }
